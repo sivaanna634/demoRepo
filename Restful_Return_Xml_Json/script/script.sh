@@ -1,4 +1,4 @@
-
+#!/bin/bash
 #TARGET_URL=https://api.run.pivotal.io
 #CF_USER=a.s.j.nivetha14@gmail.com
 #CF_PWD=SwamiJo@05
