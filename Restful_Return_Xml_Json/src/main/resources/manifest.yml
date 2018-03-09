@@ -1,0 +1,7 @@
+---
+applications:
+- name: Rest_XML_JSON
+  memory: 1G
+  instances: 2
+  routes:
+  - route: rest_xml_json.cfapps.io
