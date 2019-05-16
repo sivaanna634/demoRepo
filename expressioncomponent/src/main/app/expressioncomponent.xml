@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <flow name="expressioncomponentFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/area" doc:name="HTTP"/>
+        <logger message="Radius is #[message.inboundProperties.'http.query.params'.radius] and type of circle is #[message.inboundProperties.'http.query.params'.type]" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="radius" value="#[message.inboundProperties.'http.query.params'.radius]" doc:name="Variable"/>
+        <set-variable variableName="type" value="#[message.inboundProperties.'http.query.params'.type]" doc:name="Variable"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.type == 'quadra']">
+                <expression-component doc:name="quadra area"><![CDATA[import java.lang.Double;
+
+double radius = flowVars.radius;
+double area = 3.14*radius*radius/4;
+payload = area;]]></expression-component>
+                <set-payload value="Area for type #[flowVars.type] circle is #[payload]" doc:name="Set Payload"/>
+            </when>
+            <when expression="#[flowVars.type == 'half']">
+                <expression-component doc:name="half area"><![CDATA[import java.lang.Double;
+
+double radius = flowVars.radius;
+double area = 3.14*radius*radius/2;
+payload = area;]]></expression-component>
+                <set-payload value="Area for type #[flowVars.type] circle is #[payload]" doc:name="Set Payload"/>
+            </when>
+            <when expression="#[flowVars.type == 'full']">
+                <expression-component doc:name="Full Area"><![CDATA[import java.lang.Double;
+
+double radius = flowVars.radius;
+double area = 3.14*radius*radius;
+payload = area;]]></expression-component>
+                <set-payload value="Area for type #[flowVars.type] circle is #[payload]" doc:name="Set Payload"/>
+            </when>
+            <otherwise>
+                <expression-component doc:name="three-fourth"><![CDATA[import java.lang.Double;
+
+double radius = flowVars.radius;
+double area = 3*3.14*radius*radius/4;
+payload = area;]]></expression-component>
+                <set-payload value="Area for type #[flowVars.type] circle is #[payload]" doc:name="Set Payload"/>
+            </otherwise>
+        </choice>
+        <choice-exception-strategy doc:name="Choice Exception Strategy">
+            <catch-exception-strategy when="exception.causedBy(java.lang.NullPointerException)" doc:name="Catch Exception Strategy">
+                <set-property propertyName="http.status" value="403" doc:name="Property"/>
+                <set-payload value="#[&quot;Null Pointer Exception \n&quot;+exception.cause.message] 
+" doc:name="Set Payload"/>
+            </catch-exception-strategy>
+            <catch-exception-strategy doc:name="Catch Exception Strategy">
+                <set-property propertyName="http.status" value="403" doc:name="Property"/>
+                <set-payload value="#[&quot;Exception Occurred \n&quot;+exception.cause.message] 
+" doc:name="Set Payload"/>
+            </catch-exception-strategy>
+        </choice-exception-strategy>
+    </flow>
+</mule>
